@@ -245,7 +245,7 @@
     return `
       <div class="dgrid">
         <div><b>Earnings</b><span>${t.earnings?fmtDate(t.earnings)+(de!=null?` (${de}d)`:''):'—'}</span>${r.earnIn?' <span class="tag bad">inside window</span>':''}</div>
-        <div><b>Ex-dividend</b><span>${t.exDiv?fmtDate(t.exDiv)+(dd!=null?` (${dd}d)`:''):'—'}${t.divAmount?` · $${fmtNum(t.divAmount)}`:''}</span>${r.divIn?' <span class="tag warn">inside window</span>':''}</div>
+        <div><b>${dd!=null&&dd<0?'Last ex-dividend':'Ex-dividend'}</b><span>${t.exDiv&&(dd==null||dd>-400)?fmtDate(t.exDiv)+(dd!=null?(dd<0?` (${-dd}d ago)`:` (${dd}d)`):''):'—'}${t.divAmount&&(dd==null||dd>-400)?` · $${fmtNum(t.divAmount)}`:''}</span>${r.divIn?' <span class="tag warn">inside window</span>':''}</div>
         <div><b>Dividend yield</b><span>${fmtPct(t.divYield,2)}</span></div>
         <div><b>30d implied vol</b><span>${fmtPct(t.iv30,0)}</span></div>
         <div><b>30d realized vol</b><span>${fmtPct(t.hv30,0)}</span></div>
