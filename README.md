@@ -6,13 +6,13 @@ for both cash-secured puts and covered calls, and surfaces earnings, ex-dividend
 dates, volatility context and headlines for each.
 
 No API keys. No server. A Python script runs once a day on GitHub Actions, writes
-`site/data.json`, and GitHub Pages serves the folder. WordPress embeds it.
+`docs/data.json`, and GitHub Pages serves the folder. WordPress embeds it.
 
 ```
 basket.txt                  your 20-30 tickers, one per line
 build_data.py               nightly builder (CBOE delayed chains + Yahoo context)
-site/index.html             the app (single file, no dependencies)
-site/data.json              generated output
+docs/index.html             the app (single file, no dependencies)
+docs/data.json              generated output
 .github/workflows/build.yml daily schedule + manual "Run workflow" button
 ```
 
@@ -22,14 +22,14 @@ site/data.json              generated output
    this folder to it.
 
 2. **Enable Pages.** Repo → Settings → Pages → Source: *Deploy from a branch*,
-   Branch: `main`, folder: `/site`. Your app will live at
+   Branch: `main`, folder: `/docs`. Your app will live at
    `https://<your-user>.github.io/<repo>/`.
 
 3. **Let Actions commit.** Repo → Settings → Actions → General → Workflow
    permissions → *Read and write permissions*. Save.
 
 4. **Run it once by hand.** Repo → Actions → *Build options data* → *Run workflow*.
-   It takes 1–3 minutes for 25 tickers. When it finishes, `site/data.json` is
+   It takes 1–3 minutes for 25 tickers. When it finishes, `docs/data.json` is
    committed and the Pages URL shows real quotes.
 
 From then on it runs every weekday at 5:30pm Central (edit the cron in
@@ -40,9 +40,9 @@ Hit *Run workflow* whenever you want a fresh pull.
 
 ```
 pip install -r requirements.txt
-python build_data.py                       # real data -> site/data.json
+python build_data.py                       # real data -> docs/data.json
 python build_data.py --demo                # synthetic data, no network
-cd site && python -m http.server 8000      # open http://localhost:8000
+cd docs && python -m http.server 8000      # open http://localhost:8000
 ```
 
 (Opening `index.html` directly from disk won't work — browsers block `fetch()`

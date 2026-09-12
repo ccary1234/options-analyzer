@@ -10,7 +10,7 @@ and writes data.json for the static front-end.
 Usage:
     python build_data.py                # real data
     python build_data.py --demo         # synthetic data, no network needed
-    python build_data.py --out site/data.json --basket basket.txt
+    python build_data.py --out docs/data.json --basket basket.txt
 
 No API keys required.
 """
@@ -420,7 +420,7 @@ def build_ticker(sym, today, demo, rng):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--basket", default="basket.txt")
-    ap.add_argument("--out", default="site/data.json")
+    ap.add_argument("--out", default="docs/data.json")
     ap.add_argument("--demo", action="store_true", help="synthetic data, no network")
     ap.add_argument("--seed", type=int, default=7)
     args = ap.parse_args()
