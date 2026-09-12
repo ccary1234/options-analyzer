@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Options Premium Screener</title>
+<style>
+  :root{
+    --bg:#f7f7f5;--card:#ffffff;--ink:#1a1a1a;--muted:#6b6b6b;--line:#e4e4e0;
+    --accent:#2f5d8a;--good:#1f7a4d;--good-bg:#e6f4ec;--warn:#9a6700;--warn-bg:#fff4d6;
+    --bad:#b3261e;--bad-bg:#fbe9e7;--put:#3b6ea8;--call:#b0642a;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#141414;--card:#1e1e1e;--ink:#ececec;--muted:#9a9a9a;--line:#333;--accent:#7fb0e0;
+      --good:#6fcf97;--good-bg:#183524;--warn:#e6b84a;--warn-bg:#3a2f12;--bad:#f28b82;--bad-bg:#3d1c19;--put:#7fb0e0;--call:#e0a070;}
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  .wrap{max-width:1100px;margin:0 auto;padding:20px 16px 40px}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:16px}
+  .controls{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:flex-end;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+  .ctl label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:4px}
+  .ctl input,.ctl select{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px;width:110px}
+  .ctl input:focus,.ctl select:focus{outline:2px solid var(--accent);outline-offset:1px}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+  .seg button{font:inherit;background:var(--bg);color:var(--ink);border:0;padding:6px 12px;cursor:pointer}
+  .seg button+button{border-left:1px solid var(--line)}
+  .seg button.on{background:var(--accent);color:#fff}
+  .summary{color:var(--muted);font-size:13px;margin:0 2px 10px}
+  .banner{padding:10px 14px;border-radius:8px;margin-bottom:12px;font-size:13px}
+  .banner.warn{background:var(--warn-bg);color:var(--warn)}
+  .banner.bad{background:var(--bad-bg);color:var(--bad)}
+  .tablewrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:10px}
+  table{width:100%;border-collapse:collapse;min-width:820px}
+  th,td{padding:8px 7px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:600;position:sticky;top:0;background:var(--card);cursor:pointer;user-select:none}
+  th.l,td.l{text-align:left}
+  th .arrow{opacity:.5;font-size:10px;margin-left:3px}
+  th.group{text-align:center;border-bottom:0;padding-bottom:2px;cursor:default}
+  th.group.put{color:var(--put)}th.group.call{color:var(--call)}
+  tr.row{cursor:pointer}
+  tr.row:hover td{background:color-mix(in srgb,var(--accent) 6%,transparent)}
+  tr.row.dim td{color:var(--muted)}
+  td.num{font-family:var(--mono);font-size:12.5px}
+  .sym{font-weight:700;font-size:14px}
+  .name{color:var(--muted);font-size:12px;font-weight:400;display:block;max-width:150px;overflow:hidden;text-overflow:ellipsis}
+  .rank{color:var(--muted);font-family:var(--mono);font-size:12px;width:30px}
+  .chg{font-size:12px;font-family:var(--mono)}
+  .chg.up{color:var(--good)}.chg.dn{color:var(--bad)}
+  .tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:999px;margin-left:4px;font-weight:600;vertical-align:middle}
+  .tag.bad{background:var(--bad-bg);color:var(--bad)}.tag.warn{background:var(--warn-bg);color:var(--warn)}.tag.good{background:var(--good-bg);color:var(--good)}.tag.mute{background:var(--line);color:var(--muted)}
+  .na{color:var(--muted);font-family:var(--mono);font-size:12px}
+  .bar{display:inline-block;height:6px;border-radius:3px;background:var(--accent);vertical-align:middle;margin-right:6px;opacity:.75}
+  tr.detail td{background:var(--bg);text-align:left;white-space:normal;padding:14px 16px 16px}
+  .dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px 22px;margin-bottom:12px}
+  .dgrid div b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:600;margin-bottom:2px}
+  .dgrid div span{font-family:var(--mono);font-size:13px}
+  .trade{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+  .trade .box{border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--card)}
+  .trade .box h4{margin:0 0 6px;font-size:13px}
+  .trade .box h4.put{color:var(--put)}.trade .box h4.call{color:var(--call)}
+  .trade .box p{margin:2px 0;font-size:13px}
+  .trade .box p span{font-family:var(--mono)}
+  .news h4{margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+  .news a{color:var(--accent);text-decoration:none}
+  .news a:hover{text-decoration:underline}
+  .news li{margin-bottom:4px;font-size:13px}
+  .news small{color:var(--muted)}
+  .foot{color:var(--muted);font-size:12px;margin-top:14px;line-height:1.5}
+  @media (max-width:700px){.trade{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Options Premium Screener</h1>
+  <div class="sub" id="sub">Loading…</div>
+
+  <div class="controls">
+    <div class="ctl"><label for="target">Target return</label><input id="target" type="number" step="0.25" min="0.1" value="2"> <span style="color:var(--muted)">%</span></div>
+    <div class="ctl"><label for="days">Time frame</label><input id="days" type="number" step="1" min="1" max="120" value="30"> <span style="color:var(--muted)">days</span></div>
+    <div class="ctl"><label>Rank by</label>
+      <div class="seg" id="side">
+        <button data-v="put" class="on">Puts</button><button data-v="call">Calls</button><button data-v="best">Best side</button>
+      </div>
+    </div>
+    <div class="ctl"><label for="minoi">Min open interest</label><input id="minoi" type="number" step="10" min="0" value="20"></div>
+    <div class="ctl"><label for="hideearn">Earnings in window</label>
+      <select id="hideearn"><option value="show">Show &amp; flag</option><option value="hide">Hide</option></select></div>
+  </div>
+
+  <div id="banner"></div>
+  <div class="summary" id="summary"></div>
+  <div class="tablewrap"><table id="tbl"></table></div>
+
+  <div class="foot">
+    <b>How it works.</b> For each stock the screener picks the expiration closest to your time frame, then walks the option chain
+    from far out-of-the-money toward the current price and stops at the first strike whose bid pays your target return
+    (puts: premium ÷ strike, as a cash-secured put; calls: premium ÷ share price, as a covered call). <b>Cushion</b> is how far
+    that strike sits from the current price. <b>Score</b> is cushion divided by the stock's expected move over the window
+    (from 30-day implied volatility) — higher means the market is paying your target while asking for less risk.
+    Delta is shown as a rough probability the option finishes in the money. Quotes are delayed and refreshed once a day; this
+    is a research tool, not advice.
+  </div>
+</div>
+
+<script>
+(function(){
+  const $ = s => document.querySelector(s);
+  const fmtPct = (v,d=1) => v==null ? '—' : (v*100).toFixed(d)+'%';
+  const fmtNum = (v,d=2) => v==null ? '—' : Number(v).toFixed(d);
+  const fmtDate = s => { if(!s) return '—'; const d=new Date(s+(s.length===10?'T12:00:00':'')); return isNaN(d)?s:d.toLocaleDateString(undefined,{month:'short',day:'numeric'}); };
+  const daysUntil = (s, asOf) => { if(!s) return null; const a=new Date(asOf+'T12:00:00'), b=new Date(s.slice(0,10)+'T12:00:00'); return Math.round((b-a)/86400000); };
+
+  let DATA=null, state={target:2, days:30, side:'put', minoi:20, hideearn:'show', sort:'score', dir:-1, open:new Set()};
+
+  // ---- core math -------------------------------------------------------
+  function pickExpiration(chain, days){
+    let best=null;
+    for(const [exp,b] of Object.entries(chain)){
+      const diff=Math.abs(b.dte-days);
+      // prefer the closer one; on ties prefer the later expiration (more premium, matches "within N days" intent)
+      if(!best || diff<best.diff || (diff===best.diff && b.dte>best.dte)) best={exp,dte:b.dte,diff,b};
+    }
+    return best;
+  }
+  function findStrike(rows, side, spot, target, dte, minoi){
+    // rows are ordered nearest-spot first; walk from far OTM back toward spot
+    let hit=null;
+    for(let i=rows.length-1;i>=0;i--){
+      const [k,bid,ask,iv,delta,oi]=rows[i];
+      if(oi<minoi) continue;
+      const ret = side==='put' ? bid/k : bid/spot;
+      if(ret>=target){ hit={k,bid,ask,iv,delta,oi,ret}; break; }
+    }
+    if(!hit) return null;
+    hit.cushion = Math.abs(hit.k-spot)/spot;
+    hit.annual = hit.ret*365/dte;
+    hit.prob = hit.delta==null ? null : Math.abs(hit.delta);
+    return hit;
+  }
+  function evalTicker(t){
+    const ex = pickExpiration(t.chain, state.days);
+    const out={t, ex:null, put:null, call:null, score:null, best:null, expMove:null};
+    if(!ex) return out;
+    out.ex=ex;
+    const target=state.target/100;
+    out.put  = findStrike(ex.b.puts,  'put',  t.spot, target, ex.dte, state.minoi);
+    out.call = findStrike(ex.b.calls, 'call', t.spot, target, ex.dte, state.minoi);
+    const iv = t.iv30 || 0.3;
+    out.expMove = iv*Math.sqrt(ex.dte/365); // as fraction of spot
+    for(const s of ['put','call']) if(out[s]) out[s].score = out[s].cushion/out.expMove;
+    const p=out.put?.score, c=out.call?.score;
+    if(state.side==='put') out.score = p ?? null;
+    else if(state.side==='call') out.score = c ?? null;
+    else out.score = (p==null&&c==null)?null:Math.max(p??-1,c??-1);
+    out.best = (p??-1)>=(c??-1)?'put':'call';
+    out.earnIn = t.earnings ? (()=>{const d=daysUntil(t.earnings,DATA.asOf); return d!=null && d>=0 && d<=ex.dte;})() : false;
+    out.divIn  = t.exDiv ? (()=>{const d=daysUntil(t.exDiv,DATA.asOf); return d!=null && d>=0 && d<=ex.dte;})() : false;
+    return out;
+  }
+
+  // ---- rendering -------------------------------------------------------
+  const COLS=[
+    {id:'rank',label:'#',cls:'l',sortable:false},
+    {id:'symbol',label:'Stock',cls:'l',get:r=>r.t.symbol},
+    {id:'spot',label:'Price',get:r=>r.t.spot},
+    {id:'exp',label:'Expiry',get:r=>r.ex?.dte},
+    {id:'ivrank',label:'IV vs HV',get:r=>r.t.ivVsHvRank},
+    {id:'pstrike',label:'Strike',group:'put',get:r=>r.put?.k},
+    {id:'pcushion',label:'Cushion',group:'put',get:r=>r.put?.cushion},
+    {id:'pret',label:'Return',group:'put',get:r=>r.put?.ret},
+    {id:'pprob',label:'Δ',group:'put',get:r=>r.put?.prob},
+    {id:'cstrike',label:'Strike',group:'call',get:r=>r.call?.k},
+    {id:'ccushion',label:'Cushion',group:'call',get:r=>r.call?.cushion},
+    {id:'cret',label:'Return',group:'call',get:r=>r.call?.ret},
+    {id:'cprob',label:'Δ',group:'call',get:r=>r.call?.prob},
+    {id:'score',label:'Score',get:r=>r.score},
+  ];
+
+  function render(){
+    if(!DATA) return;
+    let rows = DATA.tickers.map(evalTicker);
+    if(state.hideearn==='hide') rows = rows.filter(r=>!r.earnIn);
+    const col = COLS.find(c=>c.id===state.sort);
+    rows.sort((a,b)=>{
+      const va=col.get(a), vb=col.get(b);
+      if(va==null && vb==null) return a.t.symbol<b.t.symbol?-1:1;
+      if(va==null) return 1; if(vb==null) return -1;
+      if(typeof va==='string') return state.dir*(va<vb?-1:va>vb?1:0);
+      return state.dir*(va-vb);
+    });
+    const hits = rows.filter(r=> state.side==='put'?r.put: state.side==='call'?r.call:(r.put||r.call)).length;
+    $('#summary').textContent = `${hits} of ${rows.length} stocks can pay ${state.target}% in ~${state.days} days` +
+      (state.side==='both'?'':` (${state.side==='put'?'cash-secured puts':state.side==='call'?'covered calls':'best side'})`) + `.`;
+
+    const maxScore = Math.max(0.01, ...rows.map(r=>r.score??0));
+    let h='<thead><tr>';
+    // group header row
+    h += '<th class="group" colspan="5"></th><th class="group put" colspan="4">Cash-secured put</th><th class="group call" colspan="4">Covered call</th><th class="group"></th></tr><tr>';
+    for(const c of COLS){
+      const active = c.id===state.sort;
+      h += `<th class="${c.cls||''}" data-sort="${c.sortable===false?'':c.id}">${c.label}${active?`<span class="arrow">${state.dir<0?'▼':'▲'}</span>`:''}</th>`;
+    }
+    h+='</tr></thead><tbody>';
+    rows.forEach((r,i)=>{
+      const t=r.t;
+      const dim = state.side==='put'?!r.put: state.side==='call'?!r.call: !(r.put||r.call);
+      const chg = t.prevClose? (t.spot-t.prevClose)/t.prevClose : null;
+      const tags = [];
+      if(r.earnIn) tags.push('<span class="tag bad" title="Earnings before expiration">Earn '+fmtDate(t.earnings)+'</span>');
+      if(r.divIn) tags.push('<span class="tag warn" title="Ex-dividend before expiration">Div '+fmtDate(t.exDiv)+'</span>');
+      if(t.ivVsHvRank!=null && t.ivVsHvRank>=80) tags.push('<span class="tag good" title="Implied vol is high vs. this stock\'s realized history">Rich IV</span>');
+      if(t.ivVsHvRank!=null && t.ivVsHvRank<=15) tags.push('<span class="tag mute" title="Implied vol is low vs. this stock\'s realized history">Cheap IV</span>');
+      const side = s => r[s] ? `<td class="num">${fmtNum(r[s].k, r[s].k<10?2:r[s].k<1000?1:0)}</td><td class="num">${fmtPct(r[s].cushion)}</td><td class="num">${fmtPct(r[s].ret,2)}</td><td class="num">${fmtPct(r[s].prob,0)}</td>`
+                             : `<td class="na" colspan="4">not enough premium</td>`;
+      h += `<tr class="row ${dim?'dim':''}" data-sym="${t.symbol}">
+        <td class="rank l">${i+1}</td>
+        <td class="l"><span class="sym">${t.symbol}</span>${tags.join('')}<span class="name">${t.name||''}</span></td>
+        <td class="num">${fmtNum(t.spot)}<br><span class="chg ${chg>0?'up':chg<0?'dn':''}">${chg==null?'':(chg>0?'+':'')+fmtPct(chg)}</span></td>
+        <td class="num">${r.ex?fmtDate(r.ex.exp)+'<br><span style="color:var(--muted);font-size:11px">'+r.ex.dte+'d</span>':'—'}</td>
+        <td class="num">${t.ivVsHvRank==null?'—':t.ivVsHvRank}</td>
+        ${side('put')}${side('call')}
+        <td class="num">${r.score==null?'—':`<span class="bar" style="width:${Math.round(40*r.score/maxScore)}px"></span>${r.score.toFixed(2)}`}</td>
+      </tr>`;
+      if(state.open.has(t.symbol)) h += `<tr class="detail"><td colspan="${COLS.length}">${detail(r)}</td></tr>`;
+    });
+    h+='</tbody>';
+    $('#tbl').innerHTML=h;
+  }
+
+  function detail(r){
+    const t=r.t, asOf=DATA.asOf;
+    const de = daysUntil(t.earnings,asOf), dd = daysUntil(t.exDiv,asOf);
+    const pos52 = (t.high52&&t.low52)? (t.spot-t.low52)/(t.high52-t.low52) : null;
+    const trade = (s,label) => {
+      const x=r[s]; if(!x) return `<div class="box"><h4 class="${s}">${label}</h4><p class="na">No strike pays ${state.target}% by ${fmtDate(r.ex.exp)} with open interest ≥ ${state.minoi}.</p></div>`;
+      const coll = s==='put'? x.k*100 : t.spot*100;
+      return `<div class="box"><h4 class="${s}">${label}</h4>
+        <p>Sell the <span>${fmtDate(r.ex.exp)}</span> <span>${fmtNum(x.k,2)}</span> ${s} for <span>$${fmtNum(x.bid)}</span> (ask ${fmtNum(x.ask)})</p>
+        <p>Premium per contract <span>$${fmtNum(x.bid*100,0)}</span> on ${s==='put'?'cash':'shares'} of <span>$${fmtNum(coll,0)}</span> → <span>${fmtPct(x.ret,2)}</span> in ${r.ex.dte}d, <span>${fmtPct(x.annual,0)}</span> annualized</p>
+        <p>Cushion <span>${fmtPct(x.cushion)}</span> = <span>${x.score.toFixed(2)}×</span> the expected move; IV <span>${fmtPct(x.iv,0)}</span>; delta <span>${fmtNum(x.delta,2)}</span>; open interest <span>${x.oi}</span></p></div>`;
+    };
+    const news = (t.news||[]).map(n=>`<li><a href="${n.url}" target="_blank" rel="noopener">${n.title}</a> <small>${n.source||''}${n.date?' · '+fmtDate(n.date.slice(0,10)):''}</small></li>`).join('');
+    return `
+      <div class="dgrid">
+        <div><b>Earnings</b><span>${t.earnings?fmtDate(t.earnings)+(de!=null?` (${de}d)`:''):'—'}</span>${r.earnIn?' <span class="tag bad">inside window</span>':''}</div>
+        <div><b>Ex-dividend</b><span>${t.exDiv?fmtDate(t.exDiv)+(dd!=null?` (${dd}d)`:''):'—'}${t.divAmount?` · $${fmtNum(t.divAmount)}`:''}</span>${r.divIn?' <span class="tag warn">inside window</span>':''}</div>
+        <div><b>Dividend yield</b><span>${fmtPct(t.divYield,2)}</span></div>
+        <div><b>30d implied vol</b><span>${fmtPct(t.iv30,0)}</span></div>
+        <div><b>30d realized vol</b><span>${fmtPct(t.hv30,0)}</span></div>
+        <div><b>IV vs 1y realized</b><span>${t.ivVsHvRank==null?'—':t.ivVsHvRank+'th pct'}</span></div>
+        <div><b>Expected move (${r.ex.dte}d)</b><span>±${fmtPct(r.expMove)} (±$${fmtNum(r.expMove*t.spot)})</span></div>
+        <div><b>52-week range</b><span>${fmtNum(t.low52)} – ${fmtNum(t.high52)}${pos52!=null?` (${Math.round(pos52*100)}%)`:''}</span></div>
+        <div><b>Sector</b><span>${t.sector||'—'}</span></div>
+      </div>
+      <div class="trade">${trade('put','Cash-secured put')}${trade('call','Covered call')}</div>
+      <div class="news"><h4>Recent headlines</h4>${news?`<ul style="margin:0;padding-left:18px">${news}</ul>`:'<span class="na">none</span>'}</div>`;
+  }
+
+  // ---- events ----------------------------------------------------------
+  function bind(){
+    $('#target').addEventListener('input', e=>{ const v=parseFloat(e.target.value); if(v>0){state.target=v; render();} });
+    $('#days').addEventListener('input', e=>{ const v=parseInt(e.target.value,10); if(v>0){state.days=v; render();} });
+    $('#minoi').addEventListener('input', e=>{ const v=parseInt(e.target.value,10); if(v>=0){state.minoi=v; render();} });
+    $('#hideearn').addEventListener('change', e=>{ state.hideearn=e.target.value; render(); });
+    $('#side').addEventListener('click', e=>{
+      const b=e.target.closest('button'); if(!b) return;
+      state.side=b.dataset.v; document.querySelectorAll('#side button').forEach(x=>x.classList.toggle('on',x===b)); render();
+    });
+    $('#tbl').addEventListener('click', e=>{
+      const th=e.target.closest('th[data-sort]');
+      if(th && th.dataset.sort){ const id=th.dataset.sort; if(state.sort===id) state.dir*=-1; else {state.sort=id; state.dir = (id==='symbol'||id==='pprob'||id==='cprob')?1:-1;} render(); return; }
+      if(e.target.closest('a')) return;
+      const tr=e.target.closest('tr.row'); if(!tr) return;
+      const s=tr.dataset.sym; state.open.has(s)?state.open.delete(s):state.open.add(s); render();
+    });
+  }
+
+  async function load(){
+    const params=new URLSearchParams(location.search);
+    const src = params.get('src') || document.body.dataset.src || 'data.json';
+    try{
+      const res = await fetch(src,{cache:'no-store'});
+      if(!res.ok) throw new Error(res.status+' '+res.statusText);
+      DATA = await res.json();
+    }catch(err){
+      $('#sub').textContent='Could not load data.';
+      $('#banner').innerHTML=`<div class="banner bad">Failed to load <code>${src}</code>: ${err.message}. Run <code>build_data.py</code> and serve this folder over HTTP (browsers block fetch() from file://).</div>`;
+      return;
+    }
+    const gen=new Date(DATA.generatedAt);
+    $('#sub').textContent=`Delayed quotes as of ${DATA.asOf}, built ${gen.toLocaleString()} · ${DATA.tickers.length} stocks`;
+    if(DATA.demo) $('#banner').innerHTML='<div class="banner warn"><b>Demo data.</b> These are synthetic prices and chains generated to exercise the page. Run <code>build_data.py</code> without <code>--demo</code> for real quotes.</div>';
+    else if(DATA.errors?.length) $('#banner').innerHTML=`<div class="banner warn">Skipped (no data): ${DATA.errors.map(e=>e.symbol).join(', ')}</div>`;
+    if(params.get('target')) {$('#target').value=params.get('target'); state.target=parseFloat(params.get('target'));}
+    if(params.get('days')) {$('#days').value=params.get('days'); state.days=parseInt(params.get('days'),10);}
+    render();
+  }
+  bind(); load();
+})();
+</script>
+</body>
+</html>

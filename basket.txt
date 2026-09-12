@@ -1,0 +1,27 @@
+# One ticker per line. Lines starting with # are ignored.
+# Replace these placeholders with the 20-30 names you actually want to trade.
+AAPL
+MSFT
+NVDA
+AMZN
+GOOGL
+META
+TSLA
+AMD
+NFLX
+COST
+JPM
+BAC
+XOM
+CVX
+PFE
+KO
+PEP
+DIS
+BA
+UBER
+PLTR
+COIN
+SOFI
+F
+INTC
